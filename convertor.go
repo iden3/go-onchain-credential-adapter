@@ -47,8 +47,8 @@ func WithMerklizeOptions(merklizeOptions merklize.Options) option {
 	}
 }
 
-// W3CcredentialFromOnchainData returns a W3C credential from onchain data.
-func W3CcredentialFromOnchainData(
+// W3CCredentialFromOnchainData returns a W3C credential from onchain data.
+func W3CCredentialFromOnchainData(
 	ctx context.Context,
 	ethcli *ethclient.Client,
 	issuerDID *w3c.DID,
@@ -94,8 +94,8 @@ func W3CcredentialFromOnchainData(
 	)
 }
 
-// W3CcredentialFromOnchainHex returns a W3C credential from onchain hex data.
-func W3CcredentialFromOnchainHex(
+// W3CCredentialFromOnchainHex returns a W3C credential from onchain hex data.
+func W3CCredentialFromOnchainHex(
 	ctx context.Context,
 	ethcli *ethclient.Client,
 	issuerDID *w3c.DID,
@@ -111,7 +111,7 @@ func W3CcredentialFromOnchainHex(
 	if err != nil {
 		return nil, fmt.Errorf("failed to create adapter for onchain contract: %w", err)
 	}
-	credentialData, coreClaim, credentialSubjectFields, err := adapter.unpackHexToSturcts(hexdata)
+	credentialData, coreClaim, credentialSubjectFields, err := adapter.unpackHexToStructs(hexdata)
 	if err != nil {
 		return nil,
 			fmt.Errorf("failed to unpack hexdata: %w", err)
@@ -167,7 +167,7 @@ func convertOnchainDataToW3CCredential(
 	}
 
 	return &verifiable.W3CCredential{
-		ID:      adapter.credentialID(credentialData.Id.String()),
+		ID:      adapter.credentialID(credentialData.Id),
 		Context: append(credentialContexts[:], credentialData.Context...),
 		Type: []string{
 			verifiable.TypeW3CVerifiableCredential,
@@ -191,7 +191,7 @@ func convertCredentialSubject(
 	contractContexts []string,
 	credentialType string,
 	credentialSubjectFields []contractABI.INonMerklizedIssuerSubjectField,
-	marklizeInstance *merklize.Options,
+	marklizeOptions *merklize.Options,
 ) (map[string]any, error) {
 	contextbytes, err := json.Marshal(map[string][]string{
 		"@context": append(credentialContexts[:], contractContexts...),
@@ -202,7 +202,7 @@ func convertCredentialSubject(
 
 	credentialSubject := make(map[string]any)
 	for _, f := range credentialSubjectFields {
-		datatype, err := marklizeInstance.TypeFromContext(
+		datatype, err := marklizeOptions.TypeFromContext(
 			contextbytes,
 			fmt.Sprintf("%s.%s", credentialType, f.Key),
 		)

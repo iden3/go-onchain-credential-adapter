@@ -28,7 +28,7 @@ type adapter struct {
 }
 
 func newAdapter(
-	ctx context.Context,
+	_ context.Context,
 	ethcli *ethclient.Client,
 	did *w3c.DID,
 ) (*adapter, error) {
@@ -69,8 +69,8 @@ func (a *adapter) credentialStatus(revNonce uint64) *verifiable.CredentialStatus
 	}
 }
 
-func (a *adapter) credentialID(id string) string {
-	return fmt.Sprintf("urn:iden3:onchain:%d:%s:%s", a.chainID, a.address, id)
+func (a *adapter) credentialID(id *big.Int) string {
+	return fmt.Sprintf("urn:iden3:onchain:%d:%s:%s", a.chainID, a.address, id.String())
 }
 
 func (a *adapter) existenceProof(ctx context.Context, coreClaim *core.Claim) (*verifiable.Iden3SparseMerkleTreeProof, error) {
@@ -80,7 +80,8 @@ func (a *adapter) existenceProof(ctx context.Context, coreClaim *core.Claim) (*v
 			fmt.Errorf("failed to get hash index from core claim: %w", err)
 	}
 
-	mtpProof, err := a.onchainCli.GetClaimProof(&bind.CallOpts{Context: ctx}, hindex)
+	mtpProof, stateInfo, err := a.onchainCli.GetClaimProofWithStateInfo(
+		&bind.CallOpts{Context: ctx}, hindex)
 	if err != nil {
 		return nil,
 			fmt.Errorf("failed to get claim proof for hash index '%s': %w", hindex, err)
@@ -90,47 +91,25 @@ func (a *adapter) existenceProof(ctx context.Context, coreClaim *core.Claim) (*v
 			fmt.Errorf("the hash index '%s' does not exist in the issuer state", hindex)
 	}
 
-	callOpts := &bind.CallOpts{Context: ctx}
-	latestState, err := a.onchainCli.GetLatestPublishedState(callOpts)
+	latestStateHash, err := merkletree.NewHashFromBigInt(stateInfo.State)
 	if err != nil {
 		return nil,
-			fmt.Errorf("failed to get latest published state: %w", err)
+			fmt.Errorf("failed to create hash for latest state '%s': %w", stateInfo.State, err)
 	}
-	latestClaimsOfRoot, err := a.onchainCli.GetLatestPublishedClaimsRoot(callOpts)
+	latestClaimsOfRootHash, err := merkletree.NewHashFromBigInt(stateInfo.ClaimsRoot)
 	if err != nil {
 		return nil,
-			fmt.Errorf("failed to get latest published claims root: %w", err)
+			fmt.Errorf("failed to create hash for latest claims root '%s': %w", stateInfo.ClaimsRoot, err)
 	}
-	latestRevocationOfRoot, err := a.onchainCli.GetLatestPublishedRevocationsRoot(callOpts)
+	latestRevocationOfRootHash, err := merkletree.NewHashFromBigInt(stateInfo.RevocationsRoot)
 	if err != nil {
 		return nil,
-			fmt.Errorf("failed to get latest published revocations root: %w", err)
+			fmt.Errorf("failed to create hash for latest revocation root '%s': %w", stateInfo.RevocationsRoot, err)
 	}
-	latestRootsOfRoot, err := a.onchainCli.GetLatestPublishedRootsRoot(callOpts)
+	latestRootsOfRootHash, err := merkletree.NewHashFromBigInt(stateInfo.RootsRoot)
 	if err != nil {
 		return nil,
-			fmt.Errorf("failed to get latest published root of roots root: %w", err)
-	}
-
-	latestStateHash, err := merkletree.NewHashFromBigInt(latestState)
-	if err != nil {
-		return nil,
-			fmt.Errorf("failed to create hash for latest state '%s': %w", latestState, err)
-	}
-	latestClaimsOfRootHash, err := merkletree.NewHashFromBigInt(latestClaimsOfRoot)
-	if err != nil {
-		return nil,
-			fmt.Errorf("failed to create hash for latest claims root '%s': %w", latestClaimsOfRoot, err)
-	}
-	latestRevocationOfRootHash, err := merkletree.NewHashFromBigInt(latestRevocationOfRoot)
-	if err != nil {
-		return nil,
-			fmt.Errorf("failed to create hash for latest revocation root '%s': %w", latestRevocationOfRoot, err)
-	}
-	latestRootsOfRootHash, err := merkletree.NewHashFromBigInt(latestRootsOfRoot)
-	if err != nil {
-		return nil,
-			fmt.Errorf("failed to create hash for latest root of roots root '%s': %w", latestRootsOfRoot, err)
+			fmt.Errorf("failed to create hash for latest root of roots root '%s': %w", stateInfo.RootsRoot, err)
 	}
 
 	coreClaimHex, err := coreClaim.Hex()
@@ -176,7 +155,7 @@ func (a *adapter) fetchOnchainDataForSubject(
 	return a.onchainCli.GetCredential(&bind.CallOpts{Context: ctx}, subjectID, credentialID)
 }
 
-func (a *adapter) unpackHexToSturcts(credentialHex string) (
+func (a *adapter) unpackHexToStructs(credentialHex string) (
 	out0 contractABI.INonMerklizedIssuerCredentialData,
 	out1 [8]*big.Int,
 	out2 []contractABI.INonMerklizedIssuerSubjectField,
@@ -204,7 +183,7 @@ func (a *adapter) unpackHexToSturcts(credentialHex string) (
 }
 
 func (a *adapter) credentialProtocolVersion(ctx context.Context) (string, error) {
-	v, err := a.onchainCli.CredentialProtocolVersion(&bind.CallOpts{Context: ctx})
+	v, err := a.onchainCli.GetCredentialProtocolVersion(&bind.CallOpts{Context: ctx})
 	if err != nil {
 		return "", fmt.Errorf("failed to get credential protocol version: %w", err)
 	}
