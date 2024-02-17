@@ -166,6 +166,11 @@ func convertOnchainDataToW3CCredential(
 		return nil, err
 	}
 
+	displayMethod, err := convertDisplayMethod(credentialData.DisplayMethod)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert display method: %w", err)
+	}
+
 	return &verifiable.W3CCredential{
 		ID:      adapter.credentialID(credentialData.Id),
 		Context: append(credentialContexts[:], credentialData.Context...),
@@ -183,7 +188,26 @@ func convertOnchainDataToW3CCredential(
 		CredentialStatus:  adapter.credentialStatus(coreClaim.GetRevocationNonce()),
 		CredentialSubject: credentialSubject,
 		Proof:             verifiable.CredentialProofs{existenceProof},
+		DisplayMethod:     displayMethod,
 	}, nil
+}
+
+func convertDisplayMethod(
+	onchainDisplayMethod contractABI.INonMerklizedIssuerDisplayMethod,
+) (*verifiable.DisplayMethod, error) {
+	if onchainDisplayMethod.Id == "" && onchainDisplayMethod.Type == "" {
+		return nil, nil
+	}
+
+	switch onchainDisplayMethod.Type {
+	case string(verifiable.Iden3BasicDisplayMethodV1):
+		return &verifiable.DisplayMethod{
+			ID:   onchainDisplayMethod.Id,
+			Type: verifiable.Iden3BasicDisplayMethodV1,
+		}, nil
+	}
+
+	return nil, fmt.Errorf("unsupported display method type '%s'", onchainDisplayMethod.Type)
 }
 
 func convertCredentialSubject(
