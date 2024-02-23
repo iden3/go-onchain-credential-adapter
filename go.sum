@@ -92,8 +92,8 @@ github.com/holiman/uint256 v1.2.4 h1:jUc4Nk8fm9jZabQuqr2JzednajVmBpC+oiTiXZJEApU
 github.com/holiman/uint256 v1.2.4/go.mod h1:EOMSn4q6Nyt9P6efbI3bueV4e1b3dGlUCXeiRV4ng7E=
 github.com/huin/goupnp v1.3.0 h1:UvLUlWDNpoUdYzb2TCn+MuTWtcjXKSza2n6CBdQ0xXc=
 github.com/huin/goupnp v1.3.0/go.mod h1:gnGPsThkYa7bFi/KWmEysQRf48l2dvR5bxr2OFckNX8=
-github.com/iden3/contracts-abi/onchain-non-merklized-issuer-base/v0/go/abi v0.0.0-20240221120716-887e1cfb1340 h1:+DYH+t/RNtVsLGzp7+J/aOhLvdBV6j4o9i2vG9JR4qk=
-github.com/iden3/contracts-abi/onchain-non-merklized-issuer-base/v0/go/abi v0.0.0-20240221120716-887e1cfb1340/go.mod h1:vMgeBNntJeIDZrIDY0d6sZQU+JigUo4h+m95qeU03ew=
+github.com/iden3/contracts-abi/onchain-non-merklized-issuer-base/v0/go/abi v0.0.0-20240222110004-06aa097d1318 h1:uCDKrWlaN4WT5Yrbjc3DxwMxQsWor26w9Q0polWU4PE=
+github.com/iden3/contracts-abi/onchain-non-merklized-issuer-base/v0/go/abi v0.0.0-20240222110004-06aa097d1318/go.mod h1:vMgeBNntJeIDZrIDY0d6sZQU+JigUo4h+m95qeU03ew=
 github.com/iden3/go-iden3-core/v2 v2.0.4 h1:ggzC2zgOWgJAAcuG9X8bQG1r4gAoHZWqY7aLV8b1qgc=
 github.com/iden3/go-iden3-core/v2 v2.0.4/go.mod h1:L9PxhWPvoS9qTb3inEkZBm1RpjHBt+VTwvxssdzbAdw=
 github.com/iden3/go-iden3-crypto v0.0.15 h1:4MJYlrot1l31Fzlo2sF56u7EVFeHHJkxGXXZCtESgK4=
