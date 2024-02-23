@@ -138,8 +138,8 @@ func (a *Adapter) HexToW3CCredential(
 			credentialData.Type,
 		},
 		CredentialSchema: verifiable.CredentialSchema{
-			ID:   credentialData.CredentialSchema,
-			Type: "JsonSchema2023",
+			ID:   credentialData.CredentialSchema.Id,
+			Type: credentialData.CredentialSchema.Type,
 		},
 		Expiration:        expirationTime,
 		IssuanceDate:      &issuanceTime,
