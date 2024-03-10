@@ -38,11 +38,10 @@ var (
 // Adapter is a bridge between a smart contract and a w3c verifiable credential.
 type Adapter struct {
 	onchainCli *contractABI.NonMerklizedIssuerBase
-	did        *w3c.DID
 
-	id      core.ID
-	address string
-	chainID uint64
+	address   string
+	chainID   core.ChainID
+	issuerDID *w3c.DID
 
 	merklizeOptions merklize.Options
 }
@@ -51,37 +50,67 @@ type Adapter struct {
 func New(
 	_ context.Context,
 	ethcli *ethclient.Client,
-	did *w3c.DID,
+	contractAddress string,
+	chainID int32,
+	didMethod string,
 	merklizeOptions merklize.Options,
 ) (*Adapter, error) {
-	id, err := core.IDFromDID(*did)
-	if err != nil {
-		return nil, fmt.Errorf("failed to extract issuerID from issuerDID '%s': %w", did, err)
-	}
-	contractAddressHex, err := core.EthAddressFromID(id)
-	if err != nil {
-		return nil, fmt.Errorf("failed to extract contract address from issuerID '%s': %w", id, err)
-	}
-	chainID, err := core.ChainIDfromDID(*did)
-	if err != nil {
-		return nil, fmt.Errorf("failed to extract chainID from issuerDID '%s': %w", did, err)
-	}
-
-	onchainCli, err := contractABI.NewNonMerklizedIssuerBase(contractAddressHex, ethcli)
+	onchainCli, err := contractABI.NewNonMerklizedIssuerBase(
+		common.HexToAddress(contractAddress), ethcli)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create onchain issuer client: %w", err)
 	}
 
+	c := core.ChainID(chainID)
+	d := core.DIDMethod(didMethod)
+	issuerDID, err := buildDID(
+		contractAddress,
+		c,
+		d,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to build issuer DID: %w", err)
+	}
+
 	a := &Adapter{
 		onchainCli:      onchainCli,
-		did:             did,
-		id:              id,
-		address:         common.BytesToAddress(contractAddressHex[:]).Hex(),
-		chainID:         uint64(chainID),
+		address:         contractAddress,
+		chainID:         c,
+		issuerDID:       issuerDID,
 		merklizeOptions: merklizeOptions,
 	}
 
 	return a, nil
+}
+
+func buildDID(
+	address string,
+	chainID core.ChainID,
+	didMethod core.DIDMethod,
+) (*w3c.DID, error) {
+	blockchain, network, err := core.NetworkByChainID(core.ChainID(chainID))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get blockchain and network by chainID: %w", err)
+	}
+
+	address = strings.TrimPrefix(strings.TrimPrefix(address, "0x"), "0X")
+	address = "00000000000000" + address
+	genBytes, err := hex.DecodeString(address)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode address '%s': %w", address, err)
+	}
+	t, err := core.BuildDIDType(
+		didMethod,
+		blockchain,
+		network,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to build DID type: %w", err)
+	}
+
+	id := core.NewID(t, [27]byte(genBytes))
+
+	return core.ParseDIDFromID(id)
 }
 
 // HexToW3CCredential converts an onchain hex data to a W3C credential.
@@ -143,7 +172,7 @@ func (a *Adapter) HexToW3CCredential(
 		},
 		Expiration:        expirationTime,
 		IssuanceDate:      &issuanceTime,
-		Issuer:            a.did.String(),
+		Issuer:            a.issuerDID.String(),
 		CredentialStatus:  a.credentialStatus(coreClaim.GetRevocationNonce()),
 		CredentialSubject: credentialSubject,
 		Proof:             verifiable.CredentialProofs{existenceProof},
@@ -153,7 +182,7 @@ func (a *Adapter) HexToW3CCredential(
 
 func (a *Adapter) credentialStatus(revNonce uint64) *verifiable.CredentialStatus {
 	id := fmt.Sprintf("%s/credentialStatus?revocationNonce=%d&contractAddress=%d:%s",
-		a.did.String(), revNonce, a.chainID, a.address)
+		a.issuerDID.String(), revNonce, a.chainID, a.address)
 	return &verifiable.CredentialStatus{
 		ID:              id,
 		Type:            verifiable.Iden3OnchainSparseMerkleTreeProof2023,
@@ -211,7 +240,7 @@ func (a *Adapter) existenceProof(ctx context.Context, coreClaim *core.Claim) (*v
 	}
 
 	issuerData := verifiable.IssuerData{
-		ID: a.did.String(),
+		ID: a.issuerDID.String(),
 		State: verifiable.State{
 			Value:              strPtr(latestStateHash.Hex()),
 			ClaimsTreeRoot:     strPtr(latestClaimsOfRootHash.Hex()),

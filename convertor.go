@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/iden3/go-iden3-core/v2/w3c"
+	core "github.com/iden3/go-iden3-core/v2"
 	adapterV0 "github.com/iden3/go-onchain-credential-adapter/adapter/v0"
 	"github.com/iden3/go-schema-processor/v2/merklize"
 	"github.com/iden3/go-schema-processor/v2/verifiable"
@@ -16,6 +16,7 @@ import (
 // Options contains options for the W3CCredentialFromOnchainHex convertor.
 type Options struct {
 	MerklizeOptions merklize.Options
+	DIDMethod       string
 }
 
 // Option is a functional option for the W3CCredentialFromOnchainHex convertor.
@@ -28,16 +29,26 @@ func WithMerklizeOptions(options merklize.Options) Option {
 	}
 }
 
+// WithDIDMethod sets the DID method for the convertor.
+func WithDIDMethod(method string) Option {
+	return func(o *Options) {
+		o.DIDMethod = method
+	}
+}
+
 // W3CCredentialFromOnchainHex converts an onchain hex data to a W3C credential.
 func W3CCredentialFromOnchainHex(
 	ctx context.Context,
 	ethcli *ethclient.Client,
-	issuerDID *w3c.DID,
+	contractAddress string,
+	chainID int32,
 	hexdata string,
 	version string,
 	options ...Option,
 ) (*verifiable.W3CCredential, error) {
-	opts := &Options{}
+	opts := &Options{
+		DIDMethod: string(core.DIDMethodPolygonID),
+	}
 	for _, o := range options {
 		o(opts)
 	}
@@ -53,7 +64,9 @@ func W3CCredentialFromOnchainHex(
 		aV0, err := adapterV0.New(
 			ctx,
 			ethcli,
-			issuerDID,
+			contractAddress,
+			chainID,
+			opts.DIDMethod,
 			opts.MerklizeOptions,
 		)
 		if err != nil {
