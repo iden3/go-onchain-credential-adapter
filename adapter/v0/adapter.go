@@ -88,7 +88,7 @@ func buildDID(
 	chainID core.ChainID,
 	didMethod core.DIDMethod,
 ) (*w3c.DID, error) {
-	blockchain, network, err := core.NetworkByChainID(core.ChainID(chainID))
+	blockchain, network, err := core.NetworkByChainID(chainID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get blockchain and network by chainID: %w", err)
 	}
