@@ -5,7 +5,7 @@ go 1.21.4
 require (
 	github.com/ethereum/go-ethereum v1.13.12
 	github.com/iden3/contracts-abi/onchain-non-merklized-issuer-base/v0/go/abi v0.0.0-20240222110004-06aa097d1318
-	github.com/iden3/go-iden3-core/v2 v2.0.4
+	github.com/iden3/go-iden3-core/v2 v2.1.1
 	github.com/iden3/go-merkletree-sql/v2 v2.0.6
 	github.com/iden3/go-schema-processor/v2 v2.3.0
 	github.com/piprate/json-gold v0.5.1-0.20230111113000-6ddbe6e6f19f
