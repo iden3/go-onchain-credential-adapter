@@ -406,6 +406,9 @@ func validateSourceValue(datatype string, originHash *big.Int, source any) error
 	if err != nil {
 		return fmt.Errorf("failed hash value '%s' with data type '%s': %w", source, datatype, err)
 	}
+	if sourceHash == nil {
+		return fmt.Errorf("source value not provided for type '%s'", datatype)
+	}
 	if sourceHash.Cmp(originHash) != 0 {
 		return fmt.Errorf("source value '%s' does not match origin value '%s'", sourceHash, originHash)
 	}

@@ -96,6 +96,8 @@ github.com/iden3/contracts-abi/onchain-non-merklized-issuer-base/v0/go/abi v0.0.
 github.com/iden3/contracts-abi/onchain-non-merklized-issuer-base/v0/go/abi v0.0.0-20240222110004-06aa097d1318/go.mod h1:vMgeBNntJeIDZrIDY0d6sZQU+JigUo4h+m95qeU03ew=
 github.com/iden3/go-iden3-core/v2 v2.0.4 h1:ggzC2zgOWgJAAcuG9X8bQG1r4gAoHZWqY7aLV8b1qgc=
 github.com/iden3/go-iden3-core/v2 v2.0.4/go.mod h1:L9PxhWPvoS9qTb3inEkZBm1RpjHBt+VTwvxssdzbAdw=
+github.com/iden3/go-iden3-core/v2 v2.1.1 h1:WD14iWKZmnfHTl9Em/PfGssrFYXz8YNQPjPs/cn+eHc=
+github.com/iden3/go-iden3-core/v2 v2.1.1/go.mod h1:L9PxhWPvoS9qTb3inEkZBm1RpjHBt+VTwvxssdzbAdw=
 github.com/iden3/go-iden3-crypto v0.0.15 h1:4MJYlrot1l31Fzlo2sF56u7EVFeHHJkxGXXZCtESgK4=
 github.com/iden3/go-iden3-crypto v0.0.15/go.mod h1:dLpM4vEPJ3nDHzhWFXDjzkn1qHoBeOT/3UEhXsEsP3E=
 github.com/iden3/go-merkletree-sql/v2 v2.0.6 h1:vsVDImnvnHf7Ggr45ptFOXJyWNA/8IwVQO1jzRLUlY8=
