@@ -37,7 +37,6 @@ jobs:
 
     - name: Run tests
       run: | 
-        RPC_URL_MUMBAI=${{ secrets.RPC_URL_MUMBAI }} \
         RPC_URL_AMOY=${{ secrets.RPC_URL_AMOY }} \
         IPFS_NODE_URL=${{ secrets.IPFS_NODE_URL }} \
         go test -v ./...
